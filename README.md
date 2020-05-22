@@ -20,8 +20,8 @@ It should allow the use to select 2 quantitative variables and plot a charts of 
 The idea of the application will be developed further as the project goes.
 
 # To-Do:
-- [ ] Create a user interface
-- [ ] display button to select Excel file
+- [ ] Create a user interface (ongoing)
+- [x] display button to select Excel file
 - [ ] charge the file into the application (pandas DataFrame)
 - [ ] analyse the fields and display summary if quantitative variables
 - [ ] display button (only if data is charged) that will allow the user to select two fields and plot the relation between
