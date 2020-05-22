@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction, \
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, \
     QFileDialog, QWidget, QStatusBar
 from PyQt5.QtGui import QIcon
 import sys
 import platform
+import os
 
 
 class UserInterface(QMainWindow):
@@ -43,11 +44,25 @@ class UserInterface(QMainWindow):
         frame = QWidget(self)
         frame.setGeometry(0, 0, size[0], size[1]-50)
 
-        btn_charge = QPushButton('Load file', frame)
-        btn_charge.setIcon(QIcon('icons/load.png'))
-        btn_charge.move(5, 5)
+        self.btn_charge = QPushButton('Load file', frame)
+        self.btn_charge.setIcon(QIcon('icons/load.png'))
+        self.btn_charge.move(5, 5)
+        self.btn_charge.pressed.connect(self.__select_file)
 
         self.__show_application()
+
+    def __select_file(self):
+        file_dialog = QFileDialog.Options()
+        file_dialog |= QFileDialog.DontUseNativeDialog
+        self._fileName, _ = QFileDialog.getOpenFileName(
+            self,
+            caption='Select Excel file',
+            directory=os.curdir,
+            filter='Excel files (*.xlsx)',
+            options=file_dialog
+        )
+        if self._fileName:
+            print(self._fileName)
 
     def __show_application(self):
         self.show()
