@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, \
-    QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel
+    QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel, QAction
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import sys
@@ -58,16 +58,18 @@ class UserInterface(QMainWindow):
         main_widget = QWidget(self)
 
         # select button will open a filedialog to let the user select the file
-        self.btn_select = QPushButton('Select file')
-        self.btn_select.setIcon(QIcon('icons/select.png'))
-        self.btn_select.pressed.connect(self.__select_file)
-        self.btn_select.setMaximumWidth(150)
+        self.btn_select = UserInterface._create_button(
+            text='Select file',
+            icon_path='icons/select.png',
+            connect_fn=self.__select_file
+        )
 
         # load button will load the selected file and start its processing
-        self.btn_load = QPushButton('Load file')
-        self.btn_load.setIcon(QIcon('icons/load.png'))
-        self.btn_load.pressed.connect(self.__load_file)
-        self.btn_load.setMaximumWidth(150)
+        self.btn_load = UserInterface._create_button(
+            text='Load file',
+            icon_path='icons/load.png',
+            connect_fn=self.__load_file
+        )
 
         # creating the main layout
         self.main_layout = QGridLayout()
@@ -129,8 +131,13 @@ class UserInterface(QMainWindow):
             fields = stats.columns
             qties = stats.index
 
+            btns = dict()
+
             for indf, field in enumerate(fields, 1):
-                grid.addWidget(QLabel(field), indf, 0)
+                btns[field] = LabelButton(label=field)
+                text = btns[field].text()
+                btns[field].pressed.connect(lambda text=text: print(text))
+                grid.addWidget(btns[field], indf, 0)
             for indq, qty in enumerate(qties, 1):
                 grid.addWidget(QLabel(qty), 0, indq)
 
@@ -151,6 +158,28 @@ class UserInterface(QMainWindow):
         """
         self.show()
         sys.exit(self.app.exec_())
+
+    @staticmethod
+    def _create_button(text, icon_path=None, connect_fn=None):
+        btn = QPushButton(text)
+
+        if icon_path:
+            btn.setIcon(QIcon(icon_path))
+        if connect_fn:
+            btn.pressed.connect(connect_fn)
+        btn.setMaximumWidth(150)
+
+        return btn
+
+
+class LabelButton(QPushButton):
+
+    def __init__(self, label):
+        super(LabelButton, self).__init__()
+
+        self.setText(label)
+        self.setCheckable(True)
+        self.setMaximumHeight(32)
 
 
 if __name__ == '__main__':
