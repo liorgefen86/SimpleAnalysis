@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, \
-    QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel, QAction
-from PyQt5.QtGui import QIcon
+    QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel
+from PyQt5.QtGui import QIcon, QPixmap, QColor
 from PyQt5.QtCore import Qt
 import sys
 import platform
@@ -75,13 +75,13 @@ class UserInterface(QMainWindow):
         self.main_layout = QGridLayout()
 
         # creating an horizonal box to display the buttons on
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.btn_select)
-        hbox.addWidget(self.btn_load)
-        hbox.setAlignment(Qt.AlignTop)
-        hbox.setContentsMargins(0, 0, 0, 0)
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.btn_select)
+        self.hbox.addWidget(self.btn_load)
+        self.hbox.setAlignment(Qt.AlignTop)
+        self.hbox.setContentsMargins(0, 0, 0, 0)
 
-        self.main_layout.addLayout(hbox, 0, 0)
+        self.main_layout.addLayout(self.hbox, 0, 0)
         self.main_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.main_layout.setContentsMargins(10, 0, 10, 0)
 
@@ -100,14 +100,12 @@ class UserInterface(QMainWindow):
                 if layout_item.objectName() == 'grid_stats':
                     self.main_layout.removeItem(layout_item)
 
-        file_dialog = QFileDialog.Options()
-        file_dialog |= QFileDialog.DontUseNativeDialog
         self.fileName, _ = QFileDialog.getOpenFileName(
-            self,
+            parent=self,
             caption='Select Excel file',
             directory=os.curdir,
             filter='Excel files (*.xlsx)',
-            options=file_dialog
+            options=QFileDialog.DontUseNativeDialog
         )
         if self.fileName:
             self.statusBar().showMessage(self.os_text+'\t\t\tFile charged.')
@@ -128,27 +126,49 @@ class UserInterface(QMainWindow):
 
             grid = QGridLayout()
             grid.setObjectName('grid_stats')
-            fields = stats.columns
-            qties = stats.index
+            self.fields = stats.columns
+            self.qties = stats.index
 
-            btns = dict()
+            self.active_buttons = dict()
 
-            for indf, field in enumerate(fields, 1):
-                btns[field] = LabelButton(label=field)
-                text = btns[field].text()
-                btns[field].pressed.connect(lambda text=text: print(text))
-                grid.addWidget(btns[field], indf, 0)
-            for indq, qty in enumerate(qties, 1):
+            for indf, field in enumerate(self.fields, 1):
+                self.active_buttons[field] = False
+                btn = LabelButton.create_label_button(
+                    label=field,
+                    window=self,
+                    connect_fns=[]
+                )
+
+                grid.addWidget(btn, indf, 0)
+            for indq, qty in enumerate(self.qties, 1):
                 grid.addWidget(QLabel(qty), 0, indq)
 
-            for indf, field in enumerate(fields):
-                for indq, qty in enumerate(qties):
+            for indf, field in enumerate(self.fields):
+                for indq, qty in enumerate(self.qties):
                     grid.addWidget(QLabel(str(stats.iloc[indq, indf])), 1+indf, 1+indq)
 
             self.main_layout.addLayout(grid, 1, 0, 1, 2)
 
+            if not hasattr(self, 'btn_draw'):
+                self.btn_draw = UserInterface._create_button(
+                    text='Draw Chart',
+                    icon_path='icons/load.png',
+                    connect_fn=self.__draw_chart
+                )
+                self.hbox.addWidget(self.btn_draw)
+
         else:
             self.statusBar().showMessage(self.os_text + '\t\t\tNo file selected')
+
+    def __draw_chart(self):
+        if sum(self.active_buttons.values()) < 2:
+            print('Not enough fields were selected.\nPlease select at least 2.')
+        canvas = QLabel()
+        pixmap = QPixmap()
+        pixmap.fill(QColor('white'))
+        canvas.setPixmap(pixmap)
+        canvas.setMinimumHeight(640)
+        self.main_layout.addWidget(canvas)
 
     def __show_application(self):
         """
@@ -173,13 +193,48 @@ class UserInterface(QMainWindow):
 
 
 class LabelButton(QPushButton):
-
+    """
+    class used for field buttons (quantitative fields found in the selected data)
+    Args:
+        label [str]: button's label
+    Return:
+        None
+    """
     def __init__(self, label):
         super(LabelButton, self).__init__()
 
         self.setText(label)
         self.setCheckable(True)
         self.setMaximumHeight(32)
+
+    @staticmethod
+    def create_label_button(label, window, connect_fns=None):
+        """
+        initialize a LabelButton button
+        Args:
+            label [str]: button's label
+            connect_fns [array of functions]: function to connect to the button
+        Return:
+            LabelButton
+        """
+        btn = LabelButton(label=label)
+
+        if not hasattr(window, 'active_buttons'):
+            window.active_buttons = {label: False}
+
+        # loop through the functions list and assign to the button
+        btn.toggle()
+        if connect_fns:
+            for fn in connect_fns:
+                btn.pressed.connect(fn)
+        btn.pressed.connect(lambda: LabelButton.toggle_status(window, label))
+        btn.pressed.connect(lambda: print(window.active_buttons[label]))
+
+        return btn
+
+    @staticmethod
+    def toggle_status(window, label):
+        window.active_buttons[label] = not window.active_buttons[label]
 
 
 if __name__ == '__main__':
