@@ -27,6 +27,21 @@ class DataAnalysis:
         """
         self.stats = self.df.describe()
 
+    def scatter_plot(self, fig, label_var1, label_var2, background_color='white'):
+        X = self.df[label_var1]
+        y = self.df[label_var2]
+
+        axes = fig.add_subplot(1, 1, 1)
+        axes.scatter(X, y, s=50, alpha=0.5)
+        axes.set_title(f'{label_var1} vs {label_var2}')
+        axes.set_xlabel(f'{label_var1}')
+        axes.set_ylabel(f'{label_var2}')
+        fig.set_edgecolor(background_color)
+        fig.set_facecolor(background_color)
+        axes.set_facecolor(background_color)
+
+        return axes
+
     @staticmethod
     def create_object(file_path):
         """

@@ -1,16 +1,16 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, \
     QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel
-from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon, QPalette
+from PyQt5.QtCore import Qt
 import sys
 import platform
 import os
 from data_analysis import DataAnalysis
 import matplotlib
+from matplotlib.figure import Figure
 matplotlib.use('Qt5Agg')
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 
 class UserInterface(QMainWindow):
@@ -172,18 +172,32 @@ class UserInterface(QMainWindow):
         else:
             if sum(self.active_buttons.values()) > 2:
                 print('More than 2 fields were selected.\nThe plot would use the two first selected ones.')
-            fig = Figure(figsize=(10, 7), dpi=150)
 
-            X = self.da.df[self.plot_order[0]]
-            y = self.da.df[self.plot_order[1]]
-            self.axes = fig.add_subplot(1, 1, 1)
-            self.axes.scatter(X, y, s=50, alpha=0.5)
-            self.axes.set_title(f'{self.plot_order[0]} vs {self.plot_order[1]}')
-            self.axes.set_xlabel(f'{self.plot_order[0]}')
-            self.axes.set_ylabel(f'{self.plot_order[1]}')
-            canvas = FigureCanvas(fig)
-            canvas.setMinimumSize(self.size().width(), 480)
-            self.main_layout.addWidget(canvas)
+            if not hasattr(self, 'fig'):
+                self.fig = Figure(figsize=(10, 7), dpi=150)
+                self.axes = self.da.scatter_plot(
+                    self.fig,
+                    self.plot_order[0],
+                    self.plot_order[1],
+                    self.palette().color(QPalette.Background).getRgbF()
+                )
+
+                self.canvas = FigureCanvas(self.fig)
+                self.canvas.setMinimumSize(self.size().width(), 480)
+
+                self.main_layout.addWidget(self.canvas)
+            else:
+                self.__update_figure()
+
+    def __update_figure(self):
+        self.axes.cla()
+        self.axes = self.da.scatter_plot(
+            self.fig,
+            self.plot_order[0],
+            self.plot_order[1],
+            self.palette().color(QPalette.Background).getRgbF()
+        )
+        self.canvas.draw()
 
     def __show_application(self):
         """
