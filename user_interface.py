@@ -1,11 +1,16 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, \
     QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel
 from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 import sys
 import platform
 import os
 from data_analysis import DataAnalysis
+import matplotlib
+matplotlib.use('Qt5Agg')
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 
 class UserInterface(QMainWindow):
@@ -32,6 +37,7 @@ class UserInterface(QMainWindow):
         self.setWindowTitle(title)
 
         self.fileName = ''
+        self.plot_order = []
 
         # getting information on the current os and its version
         current_os = platform.system()
@@ -78,7 +84,7 @@ class UserInterface(QMainWindow):
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.btn_select)
         self.hbox.addWidget(self.btn_load)
-        self.hbox.setAlignment(Qt.AlignTop)
+        self.hbox.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.hbox.setContentsMargins(0, 0, 0, 0)
 
         self.main_layout.addLayout(self.hbox, 0, 0)
@@ -163,12 +169,21 @@ class UserInterface(QMainWindow):
     def __draw_chart(self):
         if sum(self.active_buttons.values()) < 2:
             print('Not enough fields were selected.\nPlease select at least 2.')
-        canvas = QLabel()
-        pixmap = QPixmap()
-        pixmap.fill(QColor('white'))
-        canvas.setPixmap(pixmap)
-        canvas.setMinimumHeight(640)
-        self.main_layout.addWidget(canvas)
+        else:
+            if sum(self.active_buttons.values()) > 2:
+                print('More than 2 fields were selected.\nThe plot would use the two first selected ones.')
+            fig = Figure(figsize=(10, 7), dpi=150)
+
+            X = self.da.df[self.plot_order[0]]
+            y = self.da.df[self.plot_order[1]]
+            self.axes = fig.add_subplot(1, 1, 1)
+            self.axes.scatter(X, y, s=50, alpha=0.5)
+            self.axes.set_title(f'{self.plot_order[0]} vs {self.plot_order[1]}')
+            self.axes.set_xlabel(f'{self.plot_order[0]}')
+            self.axes.set_ylabel(f'{self.plot_order[1]}')
+            canvas = FigureCanvas(fig)
+            canvas.setMinimumSize(self.size().width(), 480)
+            self.main_layout.addWidget(canvas)
 
     def __show_application(self):
         """
@@ -187,6 +202,7 @@ class UserInterface(QMainWindow):
             btn.setIcon(QIcon(icon_path))
         if connect_fn:
             btn.pressed.connect(connect_fn)
+        btn.setMinimumWidth(150)
         btn.setMaximumWidth(150)
 
         return btn
@@ -228,13 +244,16 @@ class LabelButton(QPushButton):
             for fn in connect_fns:
                 btn.pressed.connect(fn)
         btn.pressed.connect(lambda: LabelButton.toggle_status(window, label))
-        btn.pressed.connect(lambda: print(window.active_buttons[label]))
 
         return btn
 
     @staticmethod
     def toggle_status(window, label):
         window.active_buttons[label] = not window.active_buttons[label]
+        if window.active_buttons[label]:
+            window.plot_order.append(label)
+        else:
+            window.plot_order.remove(label)
 
 
 if __name__ == '__main__':
