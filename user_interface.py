@@ -1,16 +1,15 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, \
-    QFileDialog, QWidget, QStatusBar, QHBoxLayout, QGridLayout, QLabel
-from PyQt5.QtGui import QIcon, QPalette
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 import sys
 import platform
 import os
 from data_analysis import DataAnalysis
 import matplotlib
 from matplotlib.figure import Figure
-matplotlib.use('Qt5Agg')
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+matplotlib.use('Qt5Agg')
 
 
 class UserInterface(QMainWindow):
@@ -52,7 +51,6 @@ class UserInterface(QMainWindow):
         statusbar = QStatusBar()
         statusbar.setGeometry(0, size[1]-50, size[0], 50)
         statusbar.showMessage(self.os_text)
-        self.setStatusBar(statusbar)
 
         self.__set_main_widget()
 
@@ -114,9 +112,11 @@ class UserInterface(QMainWindow):
             options=QFileDialog.DontUseNativeDialog
         )
         if self.fileName:
-            self.statusBar().showMessage(self.os_text+'\t\t\tFile charged.')
+            self.statusBar().showMessage(self.os_text+'\t\t\tData file selected.')
         else:
             self.statusBar().showMessage(self.os_text)
+
+        self.update()
 
     def __load_file(self):
         """
@@ -153,6 +153,8 @@ class UserInterface(QMainWindow):
                 for indq, qty in enumerate(self.qties):
                     grid.addWidget(QLabel(str(stats.iloc[indq, indf])), 1+indf, 1+indq)
 
+            grid.setColumnStretch(indq+1, 1)
+
             self.main_layout.addLayout(grid, 1, 0, 1, 2)
 
             if not hasattr(self, 'btn_draw'):
@@ -162,9 +164,14 @@ class UserInterface(QMainWindow):
                     connect_fn=self.__draw_chart
                 )
                 self.hbox.addWidget(self.btn_draw)
+                self.hbox.addStretch()
+
+            self.statusBar().showMessage(self.os_text + '\t\t\tData file loaded.')
 
         else:
             self.statusBar().showMessage(self.os_text + '\t\t\tNo file selected')
+
+        self.update()
 
     def __draw_chart(self):
         if sum(self.active_buttons.values()) < 2:
@@ -188,6 +195,8 @@ class UserInterface(QMainWindow):
                 self.main_layout.addWidget(self.canvas)
             else:
                 self.__update_figure()
+
+            self.update()
 
     def __update_figure(self):
         self.axes.cla()
@@ -271,4 +280,4 @@ class LabelButton(QPushButton):
 
 
 if __name__ == '__main__':
-    gui = UserInterface()
+    gui = UserInterface(size=(320, 100))
