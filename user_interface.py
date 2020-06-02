@@ -64,14 +64,14 @@ class UserInterface(QMainWindow):
         # select button will open a filedialog to let the user select the file
         self.btn_select = UserInterface._create_button(
             text='Select file',
-            icon_path='icons/select.png',
+            icon_path='icons/select2.png',
             connect_fn=self.__select_file
         )
 
         # load button will load the selected file and start its processing
         self.btn_load = UserInterface._create_button(
             text='Load file',
-            icon_path='icons/load.png',
+            icon_path='icons/load2.png',
             connect_fn=self.__load_file
         )
 
@@ -99,10 +99,7 @@ class UserInterface(QMainWindow):
             None
         """
         if hasattr(self, 'da'):
-            for ind in range(self.main_layout.count()):
-                layout_item = self.main_layout.itemAt(ind)
-                if layout_item.objectName() == 'grid_stats':
-                    self.main_layout.removeItem(layout_item)
+            self.__remove()
 
         self.fileName, _ = QFileDialog.getOpenFileName(
             parent=self,
@@ -124,12 +121,13 @@ class UserInterface(QMainWindow):
         Return:
             None
         """
-        if self.fileName:
+        if self.fileName and not hasattr(self, 'da'):
             self.da = DataAnalysis.create_object(file_path=self.fileName)
             self.da.get_statistics()
 
             stats = self.da.stats
 
+            self.grid_widget = QWidget()
             grid = QGridLayout()
             grid.setObjectName('grid_stats')
             self.fields = stats.columns
@@ -155,17 +153,32 @@ class UserInterface(QMainWindow):
 
             grid.setColumnStretch(indq+1, 1)
 
-            self.main_layout.addLayout(grid, 1, 0, 1, 2)
+            self.grid_widget.setLayout(grid)
+            self.main_layout.addWidget(self.grid_widget)
+            # self.main_layout.addLayout(grid, 1, 0, 1, 2)
 
-            if not hasattr(self, 'btn_draw'):
+            if not hasattr(self.hbox, 'btn_draw'):
                 self.btn_draw = UserInterface._create_button(
                     text='Draw Chart',
-                    icon_path='icons/load.png',
+                    icon_path='icons/draw2.png',
                     connect_fn=self.__draw_chart
                 )
                 self.hbox.addWidget(self.btn_draw)
-                self.hbox.addStretch()
+            else:
+                self.btn_draw.setVisible(True)
 
+            if not hasattr(self.hbox, 'btn_unload'):
+                self.btn_unload = UserInterface._create_button(
+                    text='Unload data',
+                    icon_path='icons/remove2.png',
+                    connect_fn=self.__remove
+                )
+                self.hbox.addWidget(self.btn_unload)
+            else:
+                self.btn_unload.setVisible(True)
+
+            self.hbox.addStretch()
+            self.hbox.setDirection(QBoxLayout.LeftToRight)
             self.statusBar().showMessage(self.os_text + '\t\t\tData file loaded.')
 
         else:
@@ -207,6 +220,25 @@ class UserInterface(QMainWindow):
             self.palette().color(QPalette.Background).getRgbF()
         )
         self.canvas.draw()
+
+    def __remove(self):
+        self.btn_draw.setVisible(False)
+        self.btn_unload.setVisible(False)
+        self.grid_widget.setVisible(False)
+
+        try:
+            del self.da
+            self.main_layout.removeWidget(self.grid_widget)
+            self.main_layout.removeWidget(self.canvas)
+        except AttributeError as e:
+            print('Expected error.')
+        except Exception as e:
+            print(f'Unexpected error\nError message: {e}')
+
+        self.adjustSize()
+
+        self.hbox.update()
+        self.update()
 
     def __show_application(self):
         """

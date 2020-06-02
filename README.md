@@ -22,8 +22,27 @@ The idea of the application will be developed further as the project goes.
 # To-Do:
 - [ ] Create a user interface (ongoing)
 - [x] display button to select Excel file
-- [ ] charge the file into the application (pandas DataFrame)
-- [ ] analyse the fields and display summary if quantitative variables
-- [ ] display button (only if data is charged) that will allow the user to select two fields and plot the relation between
+- [x] charge the file into the application (pandas DataFrame)
+- [x] analyse the fields and display summary if quantitative variables
+- [x] display button (only if data is charged) that will allow the user to select two fields 
+and plot the relation between
+- [X] add selection buttons once the data has been loaded
+- [X] draw chart for selected quantitative variables
+
 
 The To-Do list is quite simplistic for now but I will update it as the project develop.
+
+# Attributes:
+## Icons:
+- Select icon: Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a>
+from 
+<a href="https://www.flaticon.com/" title="Flaticon">flaticon</a>
+- Load icon: Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a>
+from 
+<a href="https://www.flaticon.com/" title="Flaticon">flaticon</a>
+- Remove icon: Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a>
+from 
+<a href="https://www.flaticon.com/" title="Flaticon">flaticon</a>
+- Draw icon: Icons made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a>
+from 
+<a href="https://www.flaticon.com/" title="Flaticon">flaticon</a>

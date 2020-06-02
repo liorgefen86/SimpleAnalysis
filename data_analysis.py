@@ -33,7 +33,7 @@ class DataAnalysis:
 
         axes = fig.add_subplot(1, 1, 1)
         axes.scatter(X, y, s=50, alpha=0.5)
-        axes.set_title(f'{label_var1} vs {label_var2}')
+        axes.set_title(f'{label_var2} vs {label_var1}')
         axes.set_xlabel(f'{label_var1}')
         axes.set_ylabel(f'{label_var2}')
         fig.set_edgecolor(background_color)
